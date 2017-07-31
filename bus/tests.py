@@ -92,6 +92,9 @@ class TestBusRoute(TestCase):
         cls.q = StopOnRoute(route=cls.r03,stop=cls.s08,direction=False,order=4)
         cls.q.save()
 
+
+class TestBusRouteBasic(TestBusRoute):
+
     def test_setup_name_and_uid(self):
         self.assertEqual(self.r01.uid, '01')
         self.assertEqual(self.r01.name, 'r01')
@@ -128,29 +131,123 @@ class TestBusRoute(TestCase):
         ans = []
         for stop in self.r01.stops.filter(stoponroute__direction=True).order_by('stoponroute__order'):
             ans.append(stop.name)
-        self.assertEqual(' '.join(ans), 's01 s02 s03 s04')
+        self.assertEqual('-'.join(ans), 's01-s02-s03-s04')
 
         ans = []
         for stop in self.r01.stops.filter(stoponroute__direction=False).order_by('stoponroute__order'):
             ans.append(stop.name)
-        self.assertEqual(' '.join(ans), 's05 s06 s11 s12')
+        self.assertEqual('-'.join(ans), 's05-s06-s11-s12')
 
         ans = []
         for stop in self.r02.stops.filter(stoponroute__direction=True).order_by('stoponroute__order'):
             ans.append(stop.name)
-        self.assertEqual(' '.join(ans), 's01 s02 s07 s08')
+        self.assertEqual('-'.join(ans), 's01-s02-s07-s08')
 
         ans = []
         for stop in self.r02.stops.filter(stoponroute__direction=False).order_by('stoponroute__order'):
             ans.append(stop.name)
-        self.assertEqual(' '.join(ans), 's09 s10 s11 s12')
+        self.assertEqual('-'.join(ans), 's09-s10-s11-s12')
 
         ans = []
         for stop in self.r03.stops.filter(stoponroute__direction=True).order_by('stoponroute__order'):
             ans.append(stop.name)
-        self.assertEqual(' '.join(ans), 's09 s10 s03 s04')
+        self.assertEqual('-'.join(ans), 's09-s10-s03-s04')
 
         ans = []
         for stop in self.r03.stops.filter(stoponroute__direction=False).order_by('stoponroute__order'):
             ans.append(stop.name)
-        self.assertEqual(' '.join(ans), 's05 s06 s07 s08')
+        self.assertEqual('-'.join(ans), 's05-s06-s07-s08')
+
+
+class TestBusRouteStopsAfterSpecificStop(TestBusRoute):
+
+    def test_with_stop_input(self):
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s01)]), 's02-s03-s04')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s02)]), 's03-s04')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s03)]), 's04')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s04)]), '')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s05)]), 's06-s11-s12')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s06)]), 's11-s12')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s11)]), 's12')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s12)]), '')
+
+    def test_with_stop_id_input(self):
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s01.uid)]), 's02-s03-s04')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s02.uid)]), 's03-s04')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s03.uid)]), 's04')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s04.uid)]), '')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s05.uid)]), 's06-s11-s12')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s06.uid)]), 's11-s12')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s11.uid)]), 's12')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s12.uid)]), '')
+
+    def test_with_stop_name_input(self):
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s01.name)]), 's02-s03-s04')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s02.name)]), 's03-s04')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s03.name)]), 's04')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s04.name)]), '')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s05.name)]), 's06-s11-s12')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s06.name)]), 's11-s12')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s11.name)]), 's12')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s12.name)]), '')
+
+    def test_with_error_input(self):
+        # test with wrong uid or name
+        with self.assertRaisesRegex(ValueError, "BusStop matching this uid or name does not exist."):
+            self.r01.stops_after_specific_stop('s00')
+        # test with wrong input type
+        with self.assertRaisesRegex(TypeError, 'must be a BusStop object or string of BusStop.uid but ' + str(type(1))):
+            self.r01.stops_after_specific_stop(1)
+        # test with BusStop does not exist
+        with self.assertRaisesRegex(NameError, 'is not defined'):
+            self.r01.stops_after_specific_stop(s13)
+        # test with StopOnRoute does not exist
+        with self.assertRaisesRegex(ValueError, "StopOnRoute matching this uid or name does not exist."):
+            self.r01.stops_after_specific_stop(self.s07)
+
+
+class TestBusRouteStopsBeforeSpecificStop(TestBusRoute):
+
+    def test_with_stop_input(self):
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s01)]), '')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s02)]), 's01')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s03)]), 's01-s02')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s04)]), 's01-s02-s03')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s05)]), '')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s06)]), 's05')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s11)]), 's05-s06')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s12)]), 's05-s06-s11')
+
+    def test_with_stop_id_input(self):
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s01.uid)]), '')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s02.uid)]), 's01')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s03.uid)]), 's01-s02')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s04.uid)]), 's01-s02-s03')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s05.uid)]), '')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s06.uid)]), 's05')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s11.uid)]), 's05-s06')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s12.uid)]), 's05-s06-s11')
+
+    def test_with_stop_name_input(self):
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s01.name)]), '')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s02.name)]), 's01')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s03.name)]), 's01-s02')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s04.name)]), 's01-s02-s03')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s05.name)]), '')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s06.name)]), 's05')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s11.name)]), 's05-s06')
+        self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s12.name)]), 's05-s06-s11')
+
+    def test_with_error_input(self):
+        # test with wrong uid or name
+        with self.assertRaisesRegex(ValueError, "BusStop matching this uid or name does not exist."):
+            self.r01.stops_before_specific_stop('s00')
+        # test with wrong input type
+        with self.assertRaisesRegex(TypeError, 'must be a BusStop object or string of BusStop.uid but ' + str(type(1))):
+            self.r01.stops_before_specific_stop(1)
+        # test with BusStop does not exist
+        with self.assertRaisesRegex(NameError, 'is not defined'):
+            self.r01.stops_before_specific_stop(s13)
+        # test with StopOnRoute does not exist
+        with self.assertRaisesRegex(ValueError, "StopOnRoute matching this uid or name does not exist."):
+            self.r01.stops_before_specific_stop(self.s07)
