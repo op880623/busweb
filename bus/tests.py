@@ -3,7 +3,7 @@ from django.test import TestCase
 from bus.models import BusRoute, BusStop, StopOnRoute
 
 
-class TestBusRoute(TestCase):
+class TestBus(TestCase):
 
     @classmethod
     def setUpTestData(cls):
@@ -93,7 +93,7 @@ class TestBusRoute(TestCase):
         cls.q.save()
 
 
-class TestBusRouteBasic(TestBusRoute):
+class TestBusBasic(TestBus):
 
     def test_setup_name_and_uid(self):
         self.assertEqual(self.r01.uid, '01')
@@ -158,8 +158,46 @@ class TestBusRouteBasic(TestBusRoute):
             ans.append(stop.name)
         self.assertEqual('-'.join(ans), 's05-s06-s07-s08')
 
+    def test_stop_routes(self):
+        self.assertIn(self.r01, self.s01.route.all())
+        self.assertIn(self.r01, self.s02.route.all())
+        self.assertIn(self.r01, self.s03.route.all())
+        self.assertIn(self.r01, self.s04.route.all())
+        self.assertIn(self.r01, self.s05.route.all())
+        self.assertIn(self.r01, self.s06.route.all())
+        self.assertIn(self.r01, self.s11.route.all())
+        self.assertIn(self.r01, self.s12.route.all())
+        self.assertIn(self.r02, self.s01.route.all())
+        self.assertIn(self.r02, self.s02.route.all())
+        self.assertIn(self.r02, self.s07.route.all())
+        self.assertIn(self.r02, self.s08.route.all())
+        self.assertIn(self.r02, self.s09.route.all())
+        self.assertIn(self.r02, self.s10.route.all())
+        self.assertIn(self.r02, self.s11.route.all())
+        self.assertIn(self.r02, self.s12.route.all())
+        self.assertIn(self.r03, self.s09.route.all())
+        self.assertIn(self.r03, self.s10.route.all())
+        self.assertIn(self.r03, self.s03.route.all())
+        self.assertIn(self.r03, self.s04.route.all())
+        self.assertIn(self.r03, self.s05.route.all())
+        self.assertIn(self.r03, self.s06.route.all())
+        self.assertIn(self.r03, self.s07.route.all())
+        self.assertIn(self.r03, self.s08.route.all())
+        self.assertEqual(len(self.s01.route.all()), 2)
+        self.assertEqual(len(self.s02.route.all()), 2)
+        self.assertEqual(len(self.s03.route.all()), 2)
+        self.assertEqual(len(self.s04.route.all()), 2)
+        self.assertEqual(len(self.s05.route.all()), 2)
+        self.assertEqual(len(self.s06.route.all()), 2)
+        self.assertEqual(len(self.s07.route.all()), 2)
+        self.assertEqual(len(self.s08.route.all()), 2)
+        self.assertEqual(len(self.s09.route.all()), 2)
+        self.assertEqual(len(self.s10.route.all()), 2)
+        self.assertEqual(len(self.s11.route.all()), 2)
+        self.assertEqual(len(self.s12.route.all()), 2)
 
-class TestBusRouteStopsAfterSpecificStop(TestBusRoute):
+
+class TestBusRouteStopsAfterSpecificStop(TestBus):
 
     def test_with_stop_input(self):
         self.assertEqual('-'.join([stop.name for stop in self.r01.stops_after_specific_stop(self.s01)]), 's02-s03-s04')
@@ -206,7 +244,7 @@ class TestBusRouteStopsAfterSpecificStop(TestBusRoute):
             self.r01.stops_after_specific_stop(self.s07)
 
 
-class TestBusRouteStopsBeforeSpecificStop(TestBusRoute):
+class TestBusRouteStopsBeforeSpecificStop(TestBus):
 
     def test_with_stop_input(self):
         self.assertEqual('-'.join([stop.name for stop in self.r01.stops_before_specific_stop(self.s01)]), '')
