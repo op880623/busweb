@@ -11,6 +11,21 @@ class BusStop(models.Model):
     def __str__(self):
         return self.name
 
+    def to_json(self):
+        uid = '"uid":"' + self.uid + '"'
+        name = '"name":"' + self.name + '"'
+        if self.latitude is None:
+            latitude = '"latitude":null'
+        else:
+            latitude = '"latitude":' + str(self.latitude)
+        if self.longitude is None:
+            longitude = '"longitude":null'
+        else:
+            longitude = '"longitude":' + str(self.longitude)
+        route = '"route":[' + ','.join(['"' + route.uid + '"' for route in self.route.all()]) + ']'
+        json = '{' + ','.join([uid, name, latitude, longitude, route]) + '}'
+        return json
+
     def stops_can_go(self):
         # return array of dicts that contain stop which self can go and routes from self to stop
         # one stop and a set of route in a dict
