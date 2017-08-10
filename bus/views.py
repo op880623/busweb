@@ -24,3 +24,10 @@ def destination(request, uid):
     stops = '"stops":[' + ','.join([stop['stop'].to_json() for stop in thisStop.stops_can_come()]) + ']'
     json = '{' + ','.join([response_type, '"thisStop":' + thisStop.to_json(), stops]) + '}'
     return HttpResponse(json)
+
+# return format
+# {
+#     "response_type": "all" or "departure" or "destination",   # no thisStop if "all"
+#     "thisStop":{stop}
+#     "stops":[{stop},{stop}]
+# }
