@@ -15,22 +15,24 @@ def log(text):
 def get_data_from_website(routeId):
     page = requests.get("https://ebus.gov.taipei/Route/StopsOfRoute?routeid=" + routeId)
     if page.status_code != 200:
-        log('website of route ' + routeId + ' is broken or not found.')
+        log('warning - website of route ' + routeId + ' is broken or not found.')
         return None
     else:
         return page.text
 
 def update_or_create_route(routeId, routeName):
-    # check id and name
     try:
         busRoute = BusRoute.objects.get(uid=routeId)
         if busRoute.name != routeName:
-            log(busRoute.name + ' is renamed to ' + routeName + '.')
+            log(' - '.join(['update', 'route', busRoute.uid,
+                ' '.join(['name:', busRoute.name, 'to', routeName])]))
+                # update - route - uid - name: name to name
             busRoute.name = routeName
             busRoute.save()
     except:
         busRoute = BusRoute(uid=routeId, name=routeName)
-        log(busRoute.name + ' is created.')
+        log(' - '.join(['create', 'route', busRoute.uid, busRoute.name]))
+        # create - route - uid - name
         busRoute.save()
     return busRoute
 
@@ -51,47 +53,44 @@ def update_or_create_stop(stopData):
     try:
         busStop = BusStop.objects.get(uid=stopData['uid'])
         if busStop.name != stopData['name']:
-            log(busStop.name + ' is renamed to ' + stopData['name'] + '.')
+            log(' - '.join(['update', 'stop', busStop.uid,
+                ' '.join(['name:', busStop.name, 'to', stopData['name']])]))
+                # update - stop - uid - name: name to name
             busStop.name = stopData['name']
             busStop.save()
         if busStop.latitude != stopData['latitude']:
-            log(busStop.name + '\'s latitude is changed from ' +
-                str(busStop.latitude) + ' to ' + str(stopData['latitude']) + '.')
+            log(' - '.join(['update', 'stop', busStop.uid, busStop.name, ' '.join(['latitude:',
+                str(busStop.latitude), 'to', str(stopData['latitude'])])]))
+                # update - stop - uid - name - latitude: latitude to latitude
             busStop.latitude = stopData['latitude']
             busStop.save()
         if busStop.longitude != stopData['longitude']:
-            log(busStop.name + '\'s longitude is changed from ' +
-                str(busStop.longitude) + ' to ' + str(stopData['longitude']) + '.')
+            log(' - '.join(['update', 'stop', busStop.uid, busStop.name, ' '.join(['longitude:',
+                str(busStop.longitude), 'to', str(stopData['longitude'])])]))
+                # update - stop - uid - name - longitude: longitude to longitude
             busStop.longitude = stopData['longitude']
             busStop.save()
     except:
         busStop = BusStop(uid=stopData['uid'], name=stopData['name'],
             latitude=stopData['latitude'], longitude=stopData['longitude'])
-        log(busStop.name + ' is created.')
+        log(' - '.join(['create', 'stop', busStop.uid, busStop.name]))
+        # create - stop - uid - name
         busStop.save()
     return busStop
 
 def update_or_create_stops_on_route(route, stop, stopData):
     try:
-        stopOnRoute = StopOnRoute.objects.get(route__uid=route.uid, stop__uid=stop.uid)
-        if stopOnRoute.direction != stopData['direction']:
-            log('direction is changed from ' + str(stopOnRoute.direction) +
-                ' to ' + str(stopData['direction']) + '.')
-            stopOnRoute.direction = stopData['direction']
-            stopOnRoute.save()
-        if stopOnRoute.order != stopData['order']:
-            log('order is changed from ' + str(stopOnRoute.order) +
-                ' to ' + str(stopData['order']) + '.')
-            stopOnRoute.order = stopData['order']
-            stopOnRoute.save()
+        stopOnRoute = StopOnRoute.objects.get(route__uid=route.uid, stop__uid=stop.uid,
+            direction=stopData['direction'], order=stopData['order'])
     except:
         stopOnRoute = StopOnRoute(route=route, stop=stop,
             direction=stopData['direction'], order=stopData['order'])
-        log('relationship between ' + str(stopOnRoute) + ' is created.')
+        log(' - '.join(['create', 'relationship', str(stopOnRoute)]))
+        # create - relationship - StopOnRoute
         stopOnRoute.save()
 
 def update_route(routeId):
-    log('start update route ' + routeId)
+    print('start update route ' + routeId)
     page = get_data_from_website(routeId)
     if not page:
         return None
@@ -99,8 +98,6 @@ def update_route(routeId):
         page_soap = BeautifulSoup(page, "html.parser")
         routeName = re.search('<span class="stationlist-title">(.+)</span>', page).group(1)
         route = update_or_create_route(routeId, routeName)
-
-    # check stops on route
     stopsData = []
     stopsRawData = page_soap.find(id='GoDirectionRoute').find_all('span',
         class_='auto-list auto-list-stationlist')
@@ -108,9 +105,19 @@ def update_route(routeId):
     stopsRawData = page_soap.find(id='BackDirectionRoute').find_all('span',
         class_='auto-list auto-list-stationlist')
     stopsData += get_data_from_raw(stopsRawData, direction=False)
-
     for stopData in stopsData:
         stop = update_or_create_stop(stopData)
         update_or_create_stops_on_route(route, stop, stopData)
+    print('complete update route ' + routeId + '\n')
 
-    log('complete update route ' + routeId)
+
+def main():
+    log('start update route time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+    with open('bus/routeid.txt', encoding='utf8') as sourceFile:
+        idSource = sourceFile.read()
+    routeIds = re.findall("id: (\S+)", idSource)
+    for routeId in routeIds:
+        update_route(routeId)
+    log('finish update route time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S") + '\n')
+
+main()
