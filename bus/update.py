@@ -1,6 +1,4 @@
 import re
-import shelve
-from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -109,15 +107,3 @@ def update_route(routeId):
         stop = update_or_create_stop(stopData)
         update_or_create_stops_on_route(route, stop, stopData)
     print('complete update route ' + routeId + '\n')
-
-
-def main():
-    log('start update route time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-    with open('bus/routeid.txt', encoding='utf8') as sourceFile:
-        idSource = sourceFile.read()
-    routeIds = re.findall("id: (\S+)", idSource)
-    for routeId in routeIds:
-        update_route(routeId)
-    log('finish update route time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S") + '\n')
-
-main()
