@@ -17,8 +17,11 @@ function add_marker(stop, map) {
 }
 
 function add_info_window(stop, map){
+  content = [stop.name, stop.uid, 'route:'].concat(stop.route)
+  content = content.concat('<button onclick="request_data(uid=\''+ stop.uid + '\', type=\'' + 'departure\')">see stops can go</button>')
+  content = content.concat('<button onclick="request_data(uid=\''+ stop.uid + '\', type=\'' + 'destination\')">see stops can come</button>')
   var infoWindow = new google.maps.InfoWindow({
-    content: stop.name
+    content: content.join('<br>')
   });
 
   google.maps.event.addListener(stop.marker, 'click', function() {
@@ -46,31 +49,54 @@ function add_listener_click_marker(marker){
   });
 }
 
+function create_marker(stopObject) {
+  add_marker(stopObject, map);  // create a new marker and store it in the stops[key].marker
+  add_info_window(stopObject, map);  // add infoWindow to the marker and listener to close the infoWindow
+  add_listener_click_marker(stopObject.marker);  // add a event on click the marker
+}
+
+
+function request_data(uid='', type='') {
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+
+      data = JSON.parse(this.responseText);
+
+      // update thisStop data if exists
+      if (uid != '' && (type == 'departure' || type == 'destination')) {
+        if (thisStop.marker !== null) {
+          thisStop.marker.setMap(null);
+        }
+        thisStop = data.thisStop;
+        create_marker(thisStop);
+      }
+
+      // clear old data and create new merker with new data
+      for (key in stops) {
+        stops[key].marker.setMap(null);
+      }
+      stops = data.stops;
+      for (key in stops) {
+        create_marker(stops[key]);
+      }
+    }
+  };
+
+  // decide request type
+  var url = "info_request/";
+  if (uid != '' && (type == 'departure' || type == 'destination')) {
+    url = "info_request/" + type + "/" + uid;
+  }
+
+  xhttp.open("GET", url, true);
+  xhttp.send();
+}
+
+
 var map = set_map();
 
-var stops = {
-  '1059400020': {
-    id: '1059400020',
-    name: '上塔悠[向東]',
-    latitude: 25.07049,
-    longitude: 121.56213,
-    route: ['0100050500'],
-    open: false,
-    marker: null
-  },
-  '2345100320': {
-    id: '2345100320',
-    name: '秀朗國小[向東]',
-    latitude: 24.99988,
-    longitude: 121.52104,
-    route: ['0100150500', '0100020700', '0100025400', '0400005100', '0100067200', '0100067220', '0400089500', '0415000200'],
-    open: false,
-    marker: null
-  }
-};
+var data, stops;
+var thisStop = {marker: null};
 
-for (key in stops) {
-  add_marker(stops[key], map);
-  add_info_window(stops[key], map);
-  add_listener_click_marker(stops[key].marker);
-}
+request_data();

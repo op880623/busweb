@@ -16,11 +16,10 @@ Including another URLconf
 from django.conf.urls import url, include
 from django.contrib import admin
 
-# from . import views
-# need a /busweb/views.py having a def named map
+from . import views
 
 urlpatterns = [
-    # url(r'^$', views.map),
+    url(r'^$', views.map),
     url(r'^admin/', admin.site.urls),
     url(r'^info_request/', include('bus.urls')),
 ]
