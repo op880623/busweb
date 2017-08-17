@@ -16,10 +16,26 @@ function add_marker(stop, map) {
   stop['marker'] = marker;
 }
 
-function add_info_window(stop, map){
-  content = [stop.name, stop.uid, 'route:'].concat(stop.route)
-  content = content.concat('<button onclick="request_data(uid=\''+ stop.uid + '\', type=\'' + 'departure\')">see stops can go</button>')
-  content = content.concat('<button onclick="request_data(uid=\''+ stop.uid + '\', type=\'' + 'destination\')">see stops can come</button>')
+function add_info_window(stop, map, type='all'){
+  var content = [];
+  content = [stop.name, stop.uid];
+  if (type=='departure'){
+    content = content.concat('route from ' + thisStop.name + ' to here:');
+    content = content.concat(stop.route.filter(function(n){
+      return thisStop.route.indexOf(n) !== -1}));
+  }
+  else if (type=='destination'){
+    content = content.concat('route from here to ' + thisStop.name + ':');
+    content = content.concat(stop.route.filter(function(n){
+      return thisStop.route.indexOf(n) !== -1}));
+  }
+  else{
+    content = content.concat('route:').concat(stop.route)
+  }
+  content = content.concat('<button onclick="request_data(uid=\'' + stop.uid +
+    '\', type=\'' + 'departure\')">see stops can go</button>')
+  content = content.concat('<button onclick="request_data(uid=\'' + stop.uid +
+    '\', type=\'' + 'destination\')">see stops can come</button>')
   var infoWindow = new google.maps.InfoWindow({
     content: content.join('<br>')
   });
@@ -49,14 +65,17 @@ function add_listener_click_marker(marker){
   });
 }
 
-function create_marker(stopObject) {
-  add_marker(stopObject, map);  // create a new marker and store it in the stops[key].marker
-  add_info_window(stopObject, map);  // add infoWindow to the marker and listener to close the infoWindow
-  add_listener_click_marker(stopObject.marker);  // add a event on click the marker
+function create_marker(stopObject, type) {
+  // create a new marker and store it in the stops[key].marker
+  add_marker(stopObject, map);
+  // add infoWindow to the marker and listener to close the infoWindow
+  add_info_window(stopObject, map, type);
+  // add a event on click the marker
+  add_listener_click_marker(stopObject.marker);
 }
 
 
-function request_data(uid='', type='') {
+function request_data(uid='', type) {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
@@ -69,7 +88,7 @@ function request_data(uid='', type='') {
           thisStop.marker.setMap(null);
         }
         thisStop = data.thisStop;
-        create_marker(thisStop);
+        create_marker(thisStop, 'all');
       }
 
       // clear old data and create new merker with new data
@@ -78,15 +97,15 @@ function request_data(uid='', type='') {
       }
       stops = data.stops;
       for (key in stops) {
-        create_marker(stops[key]);
+        create_marker(stops[key], type);
       }
     }
   };
 
   // decide request type
-  var url = "info_request/";
+  var url = "info/";
   if (uid != '' && (type == 'departure' || type == 'destination')) {
-    url = "info_request/" + type + "/" + uid;
+    url = "info/" + type + "/" + uid;
   }
 
   xhttp.open("GET", url, true);
@@ -99,4 +118,4 @@ var map = set_map();
 var data, stops;
 var thisStop = {marker: null};
 
-request_data();
+request_data(type='all');
