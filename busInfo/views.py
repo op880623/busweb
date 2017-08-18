@@ -10,19 +10,19 @@ dbRoute = 'busInfo/db/route'
 dbStop = 'busInfo/db/stop'
 
 
-def all_atops(request):
+def all_stops(request):
     stops = []
     with shelve.open(dbStop) as stopData:
         for stopId in stopData:
             stops.append(stopData[stopId])
-    json = '{"response_type":"all","stops":[' + ','.join([stop.to_json() for stop in stops[:100]]) + ']}'
+    json = '{"type":"all","stops":[' + ','.join([stop.to_json() for stop in stops]) + ']}'
     return HttpResponse(json)
 
 
 def departure(request, uid):
     with shelve.open(dbStop) as stopData:
         thisStop = stopData[uid]
-    response_type = '"response_type":"departure"'
+    response_type = '"type":"departure"'
     stops = []
     with shelve.open(dbStop) as stopData:
         for stopId in thisStop.stops_can_go(dbRoute=dbRoute):
@@ -35,7 +35,7 @@ def departure(request, uid):
 def destination(request, uid):
     with shelve.open(dbStop) as stopData:
         thisStop = stopData[uid]
-    response_type = '"response_type":"destination"'
+    response_type = '"type":"destination"'
     stops = []
     with shelve.open(dbStop) as stopData:
         for stopId in thisStop.stops_can_come(dbRoute=dbRoute):
@@ -46,7 +46,7 @@ def destination(request, uid):
 
 # return format
 # {
-#     "response_type": "all" or "departure" or "destination",   # no thisStop if "all"
+#     "type": "all" or "departure" or "destination",   # no thisStop if "all"
 #     "thisStop":{stop}
 #     "stops":[{stop},{stop}]
 # }

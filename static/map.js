@@ -1,4 +1,4 @@
-function set_map() {
+function set_map(){
   var mapOptions = {
     center: new google.maps.LatLng(25.0180917,121.5386255),
     zoom: 15,
@@ -8,17 +8,16 @@ function set_map() {
   return new google.maps.Map(document.getElementById("map"), mapOptions)
 }
 
-function add_marker(stop, map) {
+
+function add_marker(stop){
   var marker_position = new google.maps.LatLng(stop.latitude, stop.longitude);
   var marker = new google.maps.Marker({position:marker_position});
   marker.setMap(map);
-
-  stop['marker'] = marker;
+  stop.marker = marker;
 }
 
-function add_info_window(stop, map, type='all'){
-  var content = [];
-  content = [stop.name, stop.uid];
+function info_window_content(stop, type='all'){
+  var content = [stop.name, stop.uid];
   if (type=='departure'){
     content = content.concat('route from ' + thisStop.name + ' to here:');
     content = content.concat(stop.route.filter(function(n){
@@ -32,19 +31,24 @@ function add_info_window(stop, map, type='all'){
   else{
     content = content.concat('route:').concat(stop.route)
   }
-  content = content.concat('<button onclick="request_data(uid=\'' + stop.uid +
-    '\', type=\'' + 'departure\')">see stops can go</button>')
-  content = content.concat('<button onclick="request_data(uid=\'' + stop.uid +
-    '\', type=\'' + 'destination\')">see stops can come</button>')
-  var infoWindow = new google.maps.InfoWindow({
-    content: content.join('<br>')
-  });
+  // request_data('info/departure/stopUid/', type='departure'or'destination', render_this_stop)
+  content = content.concat('<button onclick="request_data(' +
+    '\'info/departure/' + stop.uid + '/\', ' +
+    '\'departure\', ' + 'render_this_stop)">see stops can go</button>')
+  content = content.concat('<button onclick="request_data(' +
+    '\'info/destination/' + stop.uid + '/\', ' +
+    '\'destination\', ' + 'render_this_stop)">see stops can come</button>')
+  return content.join('<br>');
+}
 
-  google.maps.event.addListener(stop.marker, 'click', function() {
+function add_listener_click_marker(stop, infoWindow){
+  google.maps.event.addListener(stop.marker, 'click', function(){
+    map.setZoom(15);
+    map.setCenter(stop.marker.getPosition());
     if(!stop.open){
       infoWindow.open(map, stop.marker);
       stop.open = true;
-      var listener = google.maps.event.addListener(map, 'click', function() {
+      var listener = google.maps.event.addListener(map, 'click', function(){
         infoWindow.close();
         stop.open = false;
         google.maps.event.removeListener(listener);
@@ -58,64 +62,59 @@ function add_info_window(stop, map, type='all'){
   });
 }
 
-function add_listener_click_marker(marker){
-  google.maps.event.addListener(marker, 'click', function() {
-    map.setZoom(15);
-    map.setCenter(marker.getPosition());
-  });
-}
-
-function create_marker(stopObject, type) {
+function create_marker(stop, type){
   // create a new marker and store it in the stops[key].marker
-  add_marker(stopObject, map);
+  add_marker(stop);
   // add infoWindow to the marker and listener to close the infoWindow
-  add_info_window(stopObject, map, type);
+  var infoWindow = new google.maps.InfoWindow({
+    content: info_window_content(stop, type)
+  });
   // add a event on click the marker
-  add_listener_click_marker(stopObject.marker);
+  add_listener_click_marker(stop, infoWindow);
 }
 
 
-function request_data(uid='', type) {
+function render_data(type){
+  // clear old data and create new merker with new data
+  for (key in stops) {
+    stops[key].marker.setMap(null);
+  }
+  stops = data.stops;
+  for (key in stops) {
+    create_marker(stops[key], type);
+  }
+}
+
+function render_this_stop(type){
+  // update thisStop data
+  if (thisStop.marker !== null){
+    thisStop.marker.setMap(null);
+  }
+  thisStop = data.thisStop;
+  create_marker(thisStop, 'all');
+  render_data(type);
+}
+
+function request_data(url, type, renderFunc){
   var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function() {
-    if (this.readyState == 4 && this.status == 200) {
-
+  xhttp.onreadystatechange = function(){
+    if (this.readyState == 4 && this.status == 200){
       data = JSON.parse(this.responseText);
-
-      // update thisStop data if exists
-      if (uid != '' && (type == 'departure' || type == 'destination')) {
-        if (thisStop.marker !== null) {
-          thisStop.marker.setMap(null);
-        }
-        thisStop = data.thisStop;
-        create_marker(thisStop, 'all');
-      }
-
-      // clear old data and create new merker with new data
-      for (key in stops) {
-        stops[key].marker.setMap(null);
-      }
-      stops = data.stops;
-      for (key in stops) {
-        create_marker(stops[key], type);
-      }
+      renderFunc(type);
     }
   };
-
-  // decide request type
-  var url = "info/";
-  if (uid != '' && (type == 'departure' || type == 'destination')) {
-    url = "info/" + type + "/" + uid;
-  }
-
   xhttp.open("GET", url, true);
   xhttp.send();
 }
 
+
+document.getElementById("title").addEventListener("click", function(){
+  request_data("info/", "all", render_data);
+});
 
 var map = set_map();
 
 var data, stops;
 var thisStop = {marker: null};
 
-request_data(type='all');
+request_data("info/", "all", render_data);
