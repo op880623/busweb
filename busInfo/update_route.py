@@ -58,21 +58,21 @@ for routeId in routeIds:
     try:
         busRoute = routeData[routeId]
         if busRoute.name != routeName:
-            log(busRoute.name + ' is renamed to ' + routeName + '.')
+            log(busRoute.uid + ' - ' + busRoute.name + ' is renamed to ' + routeName + '.')
             busRoute.name = routeName
     except KeyError:
         busRoute = BusRoute(uid=routeId, name=routeName)
-        log(busRoute.name + ' is created.')
+        log(busRoute.uid + ' - ' + busRoute.name + ' is created.')
     # check stops on route
     stops = route.find(id='GoDirectionRoute').find_all('span', class_='auto-list auto-list-stationlist')
     routeStops = update_stops_on_route(stops)
     if busRoute.routeForward != routeStops:
-        log(busRoute.name + ' forward route is updated.')
+        log(busRoute.uid + ' - ' + busRoute.name + ' forward route is updated.')
         busRoute.routeForward = routeStops
     stops = route.find(id='BackDirectionRoute').find_all('span', class_='auto-list auto-list-stationlist')
     routeStops = update_stops_on_route(stops)
     if busRoute.routeBackward != routeStops:
-        log(busRoute.name + ' backward route is updated.')
+        log(busRoute.uid + ' - ' + busRoute.name + ' backward route is updated.')
         busRoute.routeBackward = routeStops
     routeData[busRoute.uid] = busRoute
     print(busRoute.name + ' is updated.')
