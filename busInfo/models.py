@@ -2,8 +2,8 @@ import re
 import shelve
 
 
-dbRoute = 'db/route'
-dbStop = 'db/stop'
+dbRoute = 'busInfo/db/route'
+dbStop = 'busInfo/db/stop'
 
 class BusRoute(object):
 
@@ -74,20 +74,26 @@ class BusStop(object):
         stopsCanGo = {}
         for route in self.route:
             with shelve.open(dbRoute) as routeData:
-                for stop in routeData[route].stops_after_specific_stop(self.uid):
-                    if stop in stopsCanGo.keys():
-                        stopsCanGo[stop].append(route)
-                    else:
-                        stopsCanGo[stop] = [route]
+                try:
+                    for stop in routeData[route].stops_after_specific_stop(self.uid):
+                        if stop in stopsCanGo.keys():
+                            stopsCanGo[stop].append(route)
+                        else:
+                            stopsCanGo[stop] = [route]
+                except:
+                    pass
         return stopsCanGo
 
     def stops_can_come(self, dbRoute=dbRoute):
         stopsCanCome = {}
         for route in self.route:
             with shelve.open(dbRoute) as routeData:
-                for stop in routeData[route].stops_before_specific_stop(self.uid):
-                    if stop in stopsCanCome.keys():
-                        stopsCanCome[stop].append(route)
-                    else:
-                        stopsCanCome[stop] = [route]
+                try:
+                    for stop in routeData[route].stops_before_specific_stop(self.uid):
+                        if stop in stopsCanCome.keys():
+                            stopsCanCome[stop].append(route)
+                        else:
+                            stopsCanCome[stop] = [route]
+                except:
+                    pass
         return stopsCanCome
