@@ -1,6 +1,6 @@
 import re
 import shelve
-
+from datetime import datetime
 
 dbRoute = 'busInfo/db/route'
 dbStop = 'busInfo/db/stop'
@@ -13,6 +13,7 @@ class BusRoute(object):
         self.name = name
         self.routeForward = []
         self.routeBackward = []
+        self.updateTime = datetime.now()
 
     def to_json(self):
         attributes = []
@@ -49,6 +50,7 @@ class BusStop(object):
         self.route = set()
         self.latitude = 0
         self.longitude = 0
+        self.updateTime = datetime.now()
 
     def to_json(self):
         attributes = []
