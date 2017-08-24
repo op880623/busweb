@@ -73,29 +73,23 @@ class BusStop(object):
         return connectedStops.difference({self.uid})
 
     def stops_can_go(self, dbRoute=dbRoute):
-        stopsCanGo = {}
+        stops = set()
         for route in self.route:
             with shelve.open(dbRoute) as routeData:
                 try:
                     for stop in routeData[route].stops_after_specific_stop(self.uid):
-                        if stop in stopsCanGo.keys():
-                            stopsCanGo[stop].append(route)
-                        else:
-                            stopsCanGo[stop] = [route]
+                        stops.add(stop)
                 except:
                     pass
-        return stopsCanGo
+        return stops
 
     def stops_can_come(self, dbRoute=dbRoute):
-        stopsCanCome = {}
+        stops = set()
         for route in self.route:
             with shelve.open(dbRoute) as routeData:
                 try:
                     for stop in routeData[route].stops_before_specific_stop(self.uid):
-                        if stop in stopsCanCome.keys():
-                            stopsCanCome[stop].append(route)
-                        else:
-                            stopsCanCome[stop] = [route]
+                        stops.add(stop)
                 except:
                     pass
-        return stopsCanCome
+        return stops

@@ -31,13 +31,11 @@ function info_window_content(stop, type='all'){
   else{
     content = content.concat('route:').concat(stop.route)
   }
-  // request_data('info/departure/stopUid/', type='departure'or'destination', render_this_stop)
-  content = content.concat('<button onclick="request_data(' +
-    '\'info/departure/' + stop.uid + '/\', ' +
-    '\'departure\', ' + 'render_this_stop)">see stops can go</button>')
-  content = content.concat('<button onclick="request_data(' +
-    '\'info/destination/' + stop.uid + '/\', ' +
-    '\'destination\', ' + 'render_this_stop)">see stops can come</button>')
+  // render_this_stop('departure' or 'destination', 'uid')
+  content = content.concat('<button onclick="render_this_stop(' +
+    '\'departure\', \'' + stop.uid + '\')">see stops can go</button>')
+  content = content.concat('<button onclick="render_this_stop(' +
+    '\'destination\', \'' + stop.uid + '\')">see stops can come</button>')
   return content.join('<br>');
 }
 
@@ -74,47 +72,67 @@ function create_marker(stop, type){
 }
 
 
-function render_data(type){
-  // clear old data and create new merker with new data
-  for (key in stops) {
-    stops[key].marker.setMap(null);
-  }
-  stops = data.stops;
-  for (key in stops) {
-    create_marker(stops[key], type);
+function render_data(){
+  // create new merker with new data
+  for (key in data) {
+    create_marker(data[key], "all");
   }
 }
 
-function render_this_stop(type){
-  // update thisStop data
-  if (thisStop.marker !== null){
-    thisStop.marker.setMap(null);
-  }
-  thisStop = data.thisStop;
-  create_marker(thisStop, 'all');
-  render_data(type);
-}
-
-function request_data(url, type, renderFunc){
+function render_this_stop(type, uid){
+  url = 'info/' + type + '/' + uid + '/'
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function(){
     if (this.readyState == 4 && this.status == 200){
-      data = JSON.parse(this.responseText);
-      renderFunc(type);
+      var stopsList = JSON.parse(this.responseText).stops;
+      // update thisStop data
+      clear_map();
+      // render thisStop
+      if (thisStop.marker !== null){
+        thisStop.marker.setMap(null);
+      }
+      thisStop = data[uid];
+      create_marker(thisStop, 'all');
+      // render related stops
+      for (key in stopsList){
+        // if judgement to prevent stop with two markers
+        // due to route pass through the same stop as thisStop
+        if (data[stopsList[key]].marker.getMap() == null)
+          create_marker(data[stopsList[key]], type);
+      }
     }
   };
   xhttp.open("GET", url, true);
   xhttp.send();
 }
 
+function clear_map(){
+  // clear old data
+  for (key in data) {
+    data[key].marker.setMap(null);
+  }
+}
+
+function request_data(){
+  var xhttp = new XMLHttpRequest();
+  xhttp.onreadystatechange = function(){
+    if (this.readyState == 4 && this.status == 200){
+      data = JSON.parse(this.responseText);
+      render_data();
+    }
+  };
+  xhttp.open("GET", "info/", true);
+  xhttp.send();
+}
 
 document.getElementById("title").addEventListener("click", function(){
-  request_data("info/", "all", render_data);
+  clear_map();
+  render_data();
 });
 
 var map = set_map();
 
-var data, stops;
+var data;
 var thisStop = {marker: null};
 
-request_data("info/", "all", render_data);
+request_data();
