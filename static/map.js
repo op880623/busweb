@@ -17,31 +17,39 @@ function add_marker(stop){
 }
 
 function info_window_content(stop, type='all'){
-  var content = [stop.name, stop.uid];
+  var content = [stop.name];
   if (type=='departure'){
-    content = content.concat('route from ' + thisStop.name + ' to here:');
-    content = content.concat(stop.route.filter(function(n){
-      return thisStop.route.indexOf(n) !== -1}));
+    content = content.concat('從 ' + thisStop.name + ' 來可搭:');
+    for (index in stop.route)
+      if (thisStop.route.indexOf(stop.route[index]) !== -1)
+        content = content.concat(stop.route[index]);
+    // content = content.concat(stop.route.filter(function(n){
+    //   return thisStop.route.indexOf(n) !== -1}));
   }
   else if (type=='destination'){
-    content = content.concat('route from here to ' + thisStop.name + ':');
-    content = content.concat(stop.route.filter(function(n){
-      return thisStop.route.indexOf(n) !== -1}));
+    content = content.concat('去 ' + thisStop.name + ' 可搭:');
+    for (index in stop.route)
+      if (thisStop.route.indexOf(stop.route[index]) !== -1)
+        content = content.concat(stop.route[index]);
+    // content = content.concat(stop.route.filter(function(n){
+    //   return thisStop.route.indexOf(n) !== -1}));
   }
   else{
-    content = content.concat('route:').concat(stop.route)
+    content = content.concat('路線:').concat(stop.route)
   }
   // render_this_stop('departure' or 'destination', 'uid')
   content = content.concat('<button onclick="render_this_stop(' +
-    '\'departure\', \'' + stop.uid + '\')">see stops can go</button>')
+    '\'departure\', \'' + stop.uid + '\')">能去哪裡</button>')
   content = content.concat('<button onclick="render_this_stop(' +
-    '\'destination\', \'' + stop.uid + '\')">see stops can come</button>')
+    '\'destination\', \'' + stop.uid + '\')">如何到這</button>')
+  content = content.concat('<button onclick="render_this_stop(' +
+    '\'connected\', \'' + stop.uid + '\')">與此相連</button>')
   return content.join('<br>');
 }
 
 function add_listener_click_marker(stop, infoWindow){
   google.maps.event.addListener(stop.marker, 'click', function(){
-    map.setZoom(15);
+    map.setZoom(17);
     map.setCenter(stop.marker.getPosition());
     if(!stop.open){
       infoWindow.open(map, stop.marker);
@@ -84,7 +92,7 @@ function render_this_stop(type, uid){
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function(){
     if (this.readyState == 4 && this.status == 200){
-      var stopsList = JSON.parse(this.responseText).stops;
+      var stopsList = JSON.parse(this.responseText);
       // update thisStop data
       clear_map();
       // render thisStop
@@ -94,12 +102,12 @@ function render_this_stop(type, uid){
       thisStop = data[uid];
       create_marker(thisStop, 'all');
       // render related stops
-      for (key in stopsList){
+      for (key in stopsList)
         // if judgement to prevent stop with two markers
         // due to route pass through the same stop as thisStop
-        if (data[stopsList[key]].marker.getMap() == null)
-          create_marker(data[stopsList[key]], type);
-      }
+        for (index in stopsList[key])
+          if (data[stopsList[key][index]].marker.getMap() == null)
+            create_marker(data[stopsList[key][index]], key);
     }
   };
   xhttp.open("GET", url, true);

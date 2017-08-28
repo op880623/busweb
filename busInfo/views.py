@@ -24,7 +24,8 @@ def departure(request, uid):
     with shelve.open(dbStop) as stopData:
         thisStop = stopData[uid]
     stops = ['"' + stop + '"'for stop in thisStop.stops_can_go(dbRoute=dbRoute)]
-    json = '{"stops":[' + ','.join(stops) + ']}'
+    stopsCanGo = '"departure":[' + ','.join(stops) + ']'
+    json = '{' + stopsCanGo + '}'
     return HttpResponse(json)
 
 
@@ -32,9 +33,20 @@ def destination(request, uid):
     with shelve.open(dbStop) as stopData:
         thisStop = stopData[uid]
     stops = ['"' + stop + '"'for stop in thisStop.stops_can_come(dbRoute=dbRoute)]
-    json = '{"stops":[' + ','.join(stops) + ']}'
+    stopsCanCome = '"destination":[' + ','.join(stops) + ']'
+    json = '{' + stopsCanCome + '}'
     return HttpResponse(json)
 
+
+def connected(request, uid):
+    with shelve.open(dbStop) as stopData:
+        thisStop = stopData[uid]
+    stops = ['"' + stop + '"'for stop in thisStop.stops_can_go(dbRoute=dbRoute)]
+    stopsCanGo = '"departure":[' + ','.join(stops) + ']'
+    stops = ['"' + stop + '"'for stop in thisStop.stops_can_come(dbRoute=dbRoute)]
+    stopsCanCome = '"destination":[' + ','.join(stops) + ']'
+    json = '{' + stopsCanGo + ',' + stopsCanCome + '}'
+    return HttpResponse(json)
 # return format
 # {
 #     "type": "all" or "departure" or "destination",   # no thisStop if "all"
