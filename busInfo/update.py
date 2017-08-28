@@ -50,7 +50,7 @@ def get_route_object(routeUID):
     # get data in db or create one
     try:
         busRoute = routeData[routeUID]
-        if busRoute.updateTime > datetime.now() + timedelta(days=-1):
+        if busRoute.updateTime > datetime.now() + timedelta(days=-7):
             for stopUID in busRoute.routeForward + busRoute.routeBackward:
                 add_stop_to_queue(stopUID)
             return None
@@ -115,7 +115,7 @@ def get_stop_object(stopUID):
     # get data in db or create one
     try:
         busStop = stopData[stopUID]
-        if busStop.updateTime > datetime.now() + timedelta(days=-1):
+        if busStop.updateTime > datetime.now() + timedelta(days=-7):
             for routeUID in busStop.route:
                 add_route_to_queue(routeUID)
             return None
