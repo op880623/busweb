@@ -22,20 +22,18 @@ function info_window_content(stop, type='all'){
     content = content.concat('從 ' + thisStop.name + ' 來可搭:');
     for (index in stop.route)
       if (thisStop.route.indexOf(stop.route[index]) !== -1)
-        content = content.concat(stop.route[index]);
-    // content = content.concat(stop.route.filter(function(n){
-    //   return thisStop.route.indexOf(n) !== -1}));
+        content = content.concat(busName[stop.route[index]]);
   }
   else if (type=='destination'){
     content = content.concat('去 ' + thisStop.name + ' 可搭:');
     for (index in stop.route)
       if (thisStop.route.indexOf(stop.route[index]) !== -1)
-        content = content.concat(stop.route[index]);
-    // content = content.concat(stop.route.filter(function(n){
-    //   return thisStop.route.indexOf(n) !== -1}));
+        content = content.concat(busName[stop.route[index]]);
   }
   else{
-    content = content.concat('路線:').concat(stop.route)
+    content = content.concat('路線:');
+    for (index in stop.route)
+      content = content.concat(busName[stop.route[index]]);
   }
   // render_this_stop('departure' or 'destination', 'uid')
   content = content.concat('<button onclick="render_this_stop(' +
@@ -125,7 +123,8 @@ function request_data(){
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function(){
     if (this.readyState == 4 && this.status == 200){
-      data = JSON.parse(this.responseText);
+      data = JSON.parse(this.responseText).stop;
+      busName = JSON.parse(this.responseText).route;
       render_data();
     }
   };

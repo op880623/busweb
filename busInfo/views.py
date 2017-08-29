@@ -11,12 +11,15 @@ dbStop = 'busInfo/db/stop'
 
 
 def all_stops(request):
-    stops = []
     with shelve.open(dbStop) as stopData:
-        for stopId in stopData:
-            stop = stopData[stopId]
-            stops.append('"' + stop.uid + '":' + stop.to_json())
-    json = '{' + ','.join(stops) + '}'
+        stops = ['"' + stopId + '":' + stopData[stopId].to_json()
+            for stopId in stopData]
+    stop = '"stop":{' + ','.join(stops) + '}'
+    with shelve.open(dbRoute) as routeData:
+        routes = ['"' + routeId + '":"' + routeData[routeId].name + '"'
+            for routeId in routeData]
+    route = '"route":{' + ','.join(routes) + '}'
+    json = '{' + stop + ',' + route + '}'
     return HttpResponse(json)
 
 
@@ -47,6 +50,8 @@ def connected(request, uid):
     stopsCanCome = '"destination":[' + ','.join(stops) + ']'
     json = '{' + stopsCanGo + ',' + stopsCanCome + '}'
     return HttpResponse(json)
+
+
 # return format
 # {
 #     "type": "all" or "departure" or "destination",   # no thisStop if "all"
