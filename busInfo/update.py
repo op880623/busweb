@@ -5,6 +5,8 @@ from time import sleep
 from datetime import datetime, timedelta
 
 import requests
+from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
 
 from busInfo.models import BusRoute, BusStop
 
@@ -22,9 +24,18 @@ def log(text):
     print(text)
 
 def get_route_uid():
-    with open('busInfo/routeid.txt', encoding='utf8') as sourceFile:
-        idSource = sourceFile.read()
-    return re.findall("id: (\S+)", idSource)
+    print('collect routes...')
+    browser = webdriver.PhantomJS('busInfo/phantomjs.exe')
+    browser.get('https://ebus.gov.taipei/Query/BusRoute')
+    uids = set()
+    but_clear = browser.find_element_by_css_selector(".findroute-mainboard-li-clear")
+    for but in browser.find_elements_by_css_selector('ul.findroute-mainboard-ul>li'):
+        ActionChains(browser).click(but).click(but_clear).perform()
+        sleep(5)
+        uids = uids.union(set(re.findall('routeid=([\d\w]{10})', browser.page_source)))
+    browser.quit()
+    print('complete collecting routes.')
+    return uids
 
 def request_info(url):
     page = requests.get(url)
@@ -176,7 +187,7 @@ def update_stop(stopUID):
 log('start update route time: ' + datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
 # sets to record each object is updated or not
 # program start with ids got from get_route_uid()
-routeUndone = set(get_route_uid())
+routeUndone = get_route_uid()
 routeDone = set()
 stopUndone = set()
 stopDone = set()
