@@ -9,9 +9,20 @@ function set_map(){
 }
 
 
-function add_marker(stop){
+function add_marker(stop, type){
   var marker_position = new google.maps.LatLng(stop.latitude, stop.longitude);
-  var marker = new google.maps.Marker({position:marker_position});
+  if (type == 'all'){
+    icon = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
+    opacity = 0.4;
+  } else {
+    icon = 'http://maps.google.com/mapfiles/ms/icons/red-dot.png';
+    opacity = 1;
+  }
+  var marker = new google.maps.Marker({
+    position: marker_position,
+    icon: icon,
+    opacity: opacity
+  });
   marker.setMap(map);
   stop.marker = marker;
 }
@@ -37,11 +48,11 @@ function info_window_content(stop, type='all'){
   }
   // render_this_stop('departure' or 'destination', 'uid')
   content = content.concat('<button onclick="render_this_stop(' +
-    '\'departure\', \'' + stop.uid + '\')">能去哪裡</button>')
+    '\'departure\', \'' + stop.uid + '\')">能去哪裡</button>');
   content = content.concat('<button onclick="render_this_stop(' +
-    '\'destination\', \'' + stop.uid + '\')">如何到這</button>')
+    '\'destination\', \'' + stop.uid + '\')">如何到這</button>');
   content = content.concat('<button onclick="render_this_stop(' +
-    '\'connected\', \'' + stop.uid + '\')">與此相連</button>')
+    '\'connected\', \'' + stop.uid + '\')">與此相連</button>');
   return content.join('<br>');
 }
 
@@ -68,7 +79,7 @@ function add_listener_click_marker(stop, infoWindow){
 
 function create_marker(stop, type){
   // create a new marker and store it in the stops[key].marker
-  add_marker(stop);
+  add_marker(stop, type);
   // add infoWindow to the marker and listener to close the infoWindow
   var infoWindow = new google.maps.InfoWindow({
     content: info_window_content(stop, type)
@@ -78,68 +89,75 @@ function create_marker(stop, type){
 }
 
 
-function render_data(){
-  // create new merker with new data
-  for (key in data) {
-    create_marker(data[key], "all");
-  }
-}
-
 function render_this_stop(type, uid){
   url = 'info/' + type + '/' + uid + '/'
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function(){
     if (this.readyState == 4 && this.status == 200){
-      var stopsList = JSON.parse(this.responseText);
-      // update thisStop data
-      clear_map();
-      // render thisStop
-      if (thisStop.marker !== null){
-        thisStop.marker.setMap(null);
-      }
+      // turn old related stops back to normal stops
+      if (thisStop.marker !== null)
+        update_markers('to_normal');
+      // update thisStop and related data
       thisStop = data[uid];
-      create_marker(thisStop, 'all');
-      // render related stops
-      for (key in stopsList)
-        // if judgement to prevent stop with two markers
-        // due to route pass through the same stop as thisStop
-        for (index in stopsList[key])
-          if (data[stopsList[key][index]].marker.getMap() == null)
-            create_marker(data[stopsList[key][index]], key);
+      stopsList = JSON.parse(this.responseText);
+      // turn new related stops to marked stops
+      update_markers('to_related');
+      thisStop.marker.setIcon('http://maps.google.com/mapfiles/ms/icons/red-dot.png');
+      thisStop.marker.setOpacity(1);
     }
   };
   xhttp.open("GET", url, true);
   xhttp.send();
 }
 
-function clear_map(){
-  // clear old data
-  for (key in data) {
-    data[key].marker.setMap(null);
-  }
+function update_markers(marker_type){
+  // clear old markers of related stops
+  all_related_stops_do(function(){
+    data[stopsList[key][index]].marker.setMap(null);
+  });
+  // clear old marker of thisStop
+  if (thisStop.marker.getMap() !== null)
+    thisStop.marker.setMap(null);
+
+  // set markers of related stops
+  all_related_stops_do(function(){
+    if (marker_type == 'to_related')
+      create_marker(data[stopsList[key][index]], key);
+    else
+      create_marker(data[stopsList[key][index]], 'all');
+  });
+  // set marker of thisStop
+  if (thisStop.marker.getMap() !== null)
+    //  this if judgement prevents stop having two markers
+    // due to route pass through the same stop as thisStop
+    thisStop.marker.setMap(null);
+  create_marker(thisStop, 'all');
 }
 
-function request_data(){
-  var xhttp = new XMLHttpRequest();
-  xhttp.onreadystatechange = function(){
-    if (this.readyState == 4 && this.status == 200){
-      data = JSON.parse(this.responseText).stop;
-      busName = JSON.parse(this.responseText).route;
-      render_data();
-    }
-  };
-  xhttp.open("GET", "info/", true);
-  xhttp.send();
+
+function all_related_stops_do(behavior){
+  // method to go through all related stops
+  for (key in stopsList)
+    for (index in stopsList[key])
+      behavior();
 }
 
-document.getElementById("title").addEventListener("click", function(){
-  clear_map();
-  render_data();
-});
 
 var map = set_map();
 
 var data;
 var thisStop = {marker: null};
+var stopsList;
 
-request_data();
+var xhttp = new XMLHttpRequest();
+xhttp.onreadystatechange = function(){
+  if (this.readyState == 4 && this.status == 200){
+    data = JSON.parse(this.responseText).stop;
+    busName = JSON.parse(this.responseText).route;
+    // create new merker with new data
+    for (key in data)
+      create_marker(data[key], "all");
+  }
+};
+xhttp.open("GET", "info/", true);
+xhttp.send();
