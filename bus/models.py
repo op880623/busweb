@@ -15,7 +15,7 @@ class Stop(models.Model):
 class Bus(models.Model):
     uid = models.CharField(max_length=15)
     name = models.CharField(max_length=100)
-    stops = ArrayField(models.CharField(max_length=15), blank=True, null=True)
+    stopsId = ArrayField(models.CharField(max_length=15), blank=True, null=True)
     updateDate = models.DateTimeField()
 
     def __str__(self):
