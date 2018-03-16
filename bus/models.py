@@ -7,7 +7,7 @@ class Stop(models.Model):
     name = models.CharField(max_length=100)
     latitude = models.FloatField(max_length=10, blank=True, null=True)
     longitude = models.FloatField(max_length=10, blank=True, null=True)
-    # busses = models.ManyToManyField('Bus', through='BusStop')
+    updateDate = models.DateTimeField()
 
     def __str__(self):
         return self.name
@@ -15,8 +15,8 @@ class Stop(models.Model):
 class Bus(models.Model):
     uid = models.CharField(max_length=15)
     name = models.CharField(max_length=100)
-    # stops = models.ManyToManyField(Stop, through='BusStop')
     stops = ArrayField(models.CharField(max_length=15), blank=True, null=True)
+    updateDate = models.DateTimeField()
 
     def __str__(self):
         return self.name
