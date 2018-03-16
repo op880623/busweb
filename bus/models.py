@@ -1,6 +1,7 @@
 import re
 import json
 from time import sleep
+from datetime import timedelta
 
 import requests
 
@@ -24,7 +25,7 @@ class Stop(models.Model):
         if cls.objects.filter(uid = uid).exists():
             return cls.objects.get(uid = uid)
         stop = cls(uid = uid)
-        stop.updateDate = timezone.now()
+        stop.updateDate = timezone.now() + timedelta(days=-7)
         stop.update()
         print('create stop %s' % stop.name)
         return stop
@@ -84,7 +85,7 @@ class Bus(models.Model):
         if cls.objects.filter(uid = uid).exists():
             return cls.objects.get(uid = uid)
         bus = cls(uid = uid)
-        bus.updateDate = timezone.now()
+        bus.updateDate = timezone.now() + timedelta(days=-7)
         bus.update()
         print('create bus %s' % bus.name)
         return bus
@@ -147,4 +148,5 @@ def request_info(url):
     except:
         # a url redirect to other page cause this
         print('warning - info of ' + url + ' can\'t be extracted.')
+        return None
     return json.loads(jsonTxt)
