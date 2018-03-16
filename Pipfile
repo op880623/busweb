@@ -1,0 +1,30 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[packages]
+
+certifi = "==2017.7.27.1"
+chardet = "==3.0.4"
+dj-database-url = "==0.4.1"
+django = "==1.11.3"
+gunicorn = "==19.6.0"
+idna = "==2.5"
+"psycopg2" = "==2.6.2"
+pytz = "==2017.2"
+requests = "==2.18.3"
+selenium = "==3.5.0"
+"urllib3" = "==1.22"
+whitenoise = "==3.2"
+
+
+[dev-packages]
+
+
+
+[requires]
+
+python_version = "3.6"
