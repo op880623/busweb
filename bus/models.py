@@ -115,6 +115,20 @@ class Bus(models.Model):
             stopsList.append(Stop.get(uid))
         return stopsList
 
+    def stops_id_after_stop(self, stopId):
+        try:
+            index = self.stopsId.index(stopId)
+        except ValueError:
+            return set()
+        return set(self.stopsId[index+1 :])
+
+    def stops_id_before_stop(self, stopId):
+        try:
+            index = self.stopsId.index(stopId)
+        except ValueError:
+            return set()
+        return set(self.stopsId[: index])
+
     def update(self):
         info = request_info(self.url())
         if not info:
