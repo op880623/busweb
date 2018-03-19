@@ -74,15 +74,14 @@ class Stop(models.Model):
         self.updateDate = timezone.now()
         self.save()
 
-    def to_json(self):
+    def to_hash(self):
         obj = {}
         obj['uid'] = self.uid
         obj['name'] = self.name
         obj['latitude'] = self.latitude
         obj['longitude'] = self.longitude
-        obj['busses'] = self.busses_id()
-        jsonTxt = json.dumps(obj)
-        return jsonTxt
+        obj['route'] = self.busses_id()
+        return obj
 
     def stops_can_go(self):
         stops = set()
@@ -172,13 +171,12 @@ class Bus(models.Model):
         self.updateDate = timezone.now()
         self.save()
 
-    def to_json(self):
+    def to_hash(self):
         obj = {}
         obj['uid'] = self.uid
         obj['name'] = self.name
         obj['stops'] = self.stopsId
-        jsonTxt = json.dumps(obj)
-        return jsonTxt
+        return obj
 
 def request_info(url):
     page = requests.get(url)
