@@ -84,6 +84,18 @@ class Stop(models.Model):
         jsonTxt = json.dumps(obj)
         return jsonTxt
 
+    def stops_can_go(self):
+        stops = set()
+        for bus in self.busses():
+            stops.update(bus.stops_id_after_stop(self.uid))
+        return stops
+
+    def stops_can_come(self):
+        stops = set()
+        for bus in self.busses():
+            stops.update(bus.stops_id_before_stop(self.uid))
+        return stops
+
 class Bus(models.Model):
     uid = models.CharField(max_length=15)
     name = models.CharField(max_length=100)
