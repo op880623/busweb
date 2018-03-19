@@ -37,10 +37,7 @@ class Stop(models.Model):
         return Bus.objects.filter(stopsId__contains=[self.uid])
 
     def busses_id(self):
-        bussesId = []
-        for bus in Bus.objects.filter(stopsId__contains=[self.uid]):
-            bussesId.append(bus.uid)
-        return bussesId
+        return [bus.uid for bus in self.busses()]
 
     def update(self):
         info = request_info(self.url())
@@ -110,10 +107,7 @@ class Bus(models.Model):
         return "https://ebus.gov.taipei/Route/StopsOfRoute?routeid=" + self.uid
 
     def stops(self):
-        stopsList = []
-        for uid in self.stopsId:
-            stopsList.append(Stop.get(uid))
-        return stopsList
+        return [Stop.get(uid) for uid in self.stopsId]
 
     def stops_id_after_stop(self, stopId):
         try:
