@@ -36,6 +36,12 @@ class Stop(models.Model):
     def busses(self):
         return Bus.objects.filter(stopsId__contains=[self.uid])
 
+    def busses_id(self):
+        bussesId = []
+        for bus in Bus.objects.filter(stopsId__contains=[self.uid]):
+            bussesId.append(bus.uid)
+        return bussesId
+
     def update(self):
         info = request_info(self.url())
         if not info:
@@ -70,6 +76,16 @@ class Stop(models.Model):
         # save
         self.updateDate = timezone.now()
         self.save()
+
+    def to_json(self):
+        obj = {}
+        obj['uid'] = self.uid
+        obj['name'] = self.name
+        obj['latitude'] = self.latitude
+        obj['longitude'] = self.longitude
+        obj['busses'] = self.busses_id()
+        jsonTxt = json.dumps(obj)
+        return jsonTxt
 
 class Bus(models.Model):
     uid = models.CharField(max_length=15)
@@ -135,6 +151,14 @@ class Bus(models.Model):
         # save
         self.updateDate = timezone.now()
         self.save()
+
+    def to_json(self):
+        obj = {}
+        obj['uid'] = self.uid
+        obj['name'] = self.name
+        obj['stops'] = self.stopsId
+        jsonTxt = json.dumps(obj)
+        return jsonTxt
 
 def request_info(url):
     page = requests.get(url)
