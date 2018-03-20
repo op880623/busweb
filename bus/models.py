@@ -155,7 +155,7 @@ class Bus(models.Model):
         if isinstance(info['GoDirStops'], list):
             stopsData += info['GoDirStops']
         if isinstance(info['BackDirStops'], list):
-            stopsData += info['GoDirStops']
+            stopsData += info['BackDirStops']
         # make list
         stopsList = []
         for stop in stopsData:
