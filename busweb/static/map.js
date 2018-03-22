@@ -12,7 +12,7 @@ function set_map(){
 
 function add_marker(stop, type){
   var marker_position = new google.maps.LatLng(stop.latitude, stop.longitude);
-  if (type == 'all'){
+  if (type == ''){
     icon = 'http://maps.google.com/mapfiles/ms/icons/blue-dot.png';
     opacity = 0.4;
   } else {
@@ -28,7 +28,7 @@ function add_marker(stop, type){
   stop.marker = marker;
 }
 
-function info_window_content(stop, type='all'){
+function info_window_content(stop, type){
   var content = [stop.name];
   if (type=='departure'){
     content = content.concat('從 ' + thisStop.name + ' 來可搭:');
@@ -47,13 +47,12 @@ function info_window_content(stop, type='all'){
     for (index in stop.route)
       content = content.concat(busName[stop.route[index]]);
   }
-  '<a href="departure/' + stop.uid + '/"><button>能去哪裡</button></a>'
   content = content.concat(
-    '<a href="departure/' + stop.uid + '/"><button>能去哪裡</button></a>');
+    '<a href="/departure/' + stop.uid + '/"><button>能去哪裡</button></a>');
   content = content.concat(
-    '<a href="destination/' + stop.uid + '/"><button>如何到這</button></a>');
+    '<a href="/destination/' + stop.uid + '/"><button>如何到這</button></a>');
   content = content.concat(
-    '<a href="connected/' + stop.uid + '/"><button>與此相連</button></a>');
+    '<a href="/connected/' + stop.uid + '/"><button>與此相連</button></a>');
   return content.join('<br>');
 }
 
@@ -91,30 +90,47 @@ function create_marker(stop, type){
 
 
 
-function get_stop(uid){
+function get_stop(uid, type){
   if (!(uid in data)) {
-    $.get("info/stop/" + uid + "/", function(result) {
+    $.get("/info/stop/" + uid + "/", function(result) {
       data[uid] = result;
-      stop = data[uid]
+      stop = data[uid];
       if (!('marker' in stop)){
-        create_marker(stop, 'all');
+        create_marker(stop, type);
       }
       else if(stop.marker.getMap() == null){
-        create_marker(stop, 'all');
+        create_marker(stop, type);
       }
     });
   }
 }
 
 function update_frame(){
-  url = "info/stop_list/"
+  url = "/info/stop_list/"
     + "?e=" + map.getBounds().getNorthEast().lng()
     + "&n=" + map.getBounds().getNorthEast().lat()
     + "&w=" + map.getBounds().getSouthWest().lng()
     + "&s=" + map.getBounds().getSouthWest().lat();
   $.get(url, function(uids) {
     $.each(uids, function(uid) {
-      get_stop(uid);
+      get_stop(uid, type);
+    });
+  });
+}
+
+function get_stops_list(){
+  url = "/info" + window.location.pathname;
+  $.get("/info/stop/" + thisStopUID + "/", function(result) {
+    data[thisStopUID] = result;
+    thisStop = data[thisStopUID];
+    create_marker(thisStop, '');
+    map.setCenter(thisStop.marker.getPosition());
+    $.getJSON(url, function(result) {
+      $.each(result, function(type, stopsList){
+        $.each(stopsList, function(uid) {
+          get_stop(uid, type);
+        });
+      });
     });
   });
 }
@@ -125,17 +141,28 @@ var map = set_map();
 
 var data = {};
 var busName = {};
-var thisStop = {marker: null};
+var thisStop;
 var stopsList;
+var type = window.location.pathname.split("/")[1];
+if (type !== ''){
+  var thisStopUID = window.location.pathname.split("/")[2];
+}
 
 $(document).ready(function() {
-  $.getJSON("info/bus_list/", function(result) {
+  $.getJSON("/info/bus_list/", function(result) {
     $.each(result, function(uid, name) {
       busName[uid] = name;
     });
-    update_frame();
+    if (type == ''){
+      update_frame();
+    }
+    else{
+      get_stops_list();
+    }
   });
-  var listener = google.maps.event.addListener(map, 'dragend', function(){
-    update_frame();
-  });
+  if (type == ''){
+    var listener = google.maps.event.addListener(map, 'dragend', function(){
+      update_frame();
+    });
+  }
 });

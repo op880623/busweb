@@ -40,18 +40,30 @@ def stop_list(request):
 
 def departure(request, uid):
     stop = Stop.get(uid)
-    data = {'departure': [s for s in stop.stops_can_go()]}
+    data = {
+        'departure': {}
+    }
+    for s in stop.stops_can_go():
+        data['departure'][s] = None
     return JsonResponse(data)
 
 def destination(request, uid):
     stop = Stop.get(uid)
-    data = {'destination': [s for s in stop.stops_can_come()]}
+    data = {
+        'destination': {}
+    }
+    for s in stop.stops_can_come():
+        data['destination'][s] = None
     return JsonResponse(data)
 
 def connected(request, uid):
     stop = Stop.get(uid)
     data = {
-        'departure': [s for s in stop.stops_can_go()],
-        'destination': [s for s in stop.stops_can_come()]
+        'departure': {},
+        'destination': {}
     }
+    for s in stop.stops_can_go():
+        data['departure'][s] = None
+    for s in stop.stops_can_come():
+        data['destination'][s] = None
     return JsonResponse(data)
