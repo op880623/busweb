@@ -3,7 +3,6 @@ from django.conf.urls import url, include
 from . import views
 
 info = [
-    url(r'^bus_list/$', views.bus_list, name='bus_list'),
     url(r'^stop/(?P<uid>\d+)/$', views.stop, name='stop'),
     url(r'^stop_list/$', views.stop_list, name='stop_list'),
     url(r'^departure/(?P<uid>\d+)/$', views.departure, name='departure'),

@@ -4,22 +4,16 @@ from django.shortcuts import render
 from bus.models import Bus, Stop
 
 def map(request):
-    return render(request, 'bus/map.html')
+    return render(request, 'bus/map.html', {'busName': busName()})
 
 def departure_map(request, uid):
-    return render(request, 'bus/map.html')
+    return render(request, 'bus/map.html', {'busName': busName()})
 
 def destination_map(request, uid):
-    return render(request, 'bus/map.html')
+    return render(request, 'bus/map.html', {'busName': busName()})
 
 def connected_map(request, uid):
-    return render(request, 'bus/map.html')
-
-def bus_list(request):
-    data = {}
-    for bus in Bus.objects.all():
-        data[bus.uid] = bus.name
-    return JsonResponse(data)
+    return render(request, 'bus/map.html', {'busName': busName()})
 
 def stop(request, uid):
     stop = Stop.get(uid)
@@ -67,3 +61,10 @@ def connected(request, uid):
     for s in stop.stops_can_come():
         data['destination'][s] = None
     return JsonResponse(data)
+
+
+def busName():
+    data = {}
+    for bus in Bus.objects.all():
+        data[bus.uid] = bus.name
+    return data

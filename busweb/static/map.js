@@ -136,11 +136,8 @@ function get_stops_list(){
 }
 
 
-
-var map = set_map();
-
+var map;
 var data = {};
-var busName = {};
 var thisStop;
 var stopsList;
 var type = window.location.pathname.split("/")[1];
@@ -148,21 +145,19 @@ if (type !== ''){
   var thisStopUID = window.location.pathname.split("/")[2];
 }
 
-$(document).ready(function() {
-  $.getJSON("/info/bus_list/", function(result) {
-    $.each(result, function(uid, name) {
-      busName[uid] = name;
-    });
+async function init() {
+  map = set_map();
+  await setTimeout(function(){
     if (type == ''){
       update_frame();
+      var listener = google.maps.event.addListener(map, 'dragend', function(){
+        update_frame();
+      });
     }
     else{
       get_stops_list();
     }
-  });
-  if (type == ''){
-    var listener = google.maps.event.addListener(map, 'dragend', function(){
-      update_frame();
-    });
-  }
-});
+  }, 3000);
+}
+
+init();
