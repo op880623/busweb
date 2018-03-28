@@ -1,19 +1,44 @@
+import json
+
 from django.http import JsonResponse
 from django.shortcuts import render
 
 from bus.models import Bus, Stop
 
 def map(request):
-    return render(request, 'bus/map.html', {'busName': busName()})
+    data = {
+        'busName': busName(),
+        'thisStop': None,
+        'data': {
+            'departure': {},
+            'destination': {}
+        }
+    }
+    return render(request, 'bus/map.html', data)
 
 def departure_map(request, uid):
-    return render(request, 'bus/map.html', {'busName': busName()})
+    data = {
+        'busName': busName(),
+        'thisStop': thisStop(uid),
+        'data': connected_stops(uid, True, False)
+    }
+    return render(request, 'bus/map.html', data)
 
 def destination_map(request, uid):
-    return render(request, 'bus/map.html', {'busName': busName()})
+    data = {
+        'busName': busName(),
+        'thisStop': thisStop(uid),
+        'data': connected_stops(uid, False, True)
+    }
+    return render(request, 'bus/map.html', data)
 
 def connected_map(request, uid):
-    return render(request, 'bus/map.html', {'busName': busName()})
+    data = {
+        'busName': busName(),
+        'thisStop': thisStop(uid),
+        'data': connected_stops(uid, True, True)
+    }
+    return render(request, 'bus/map.html', data)
 
 def stop(request, uid):
     stop = Stop.get(uid)
@@ -32,39 +57,26 @@ def stop_list(request):
         data[stop.uid] = None
     return JsonResponse(data)
 
-def departure(request, uid):
-    stop = Stop.get(uid)
-    data = {
-        'departure': {}
-    }
-    for s in stop.stops_can_go():
-        data['departure'][s] = None
-    return JsonResponse(data)
-
-def destination(request, uid):
-    stop = Stop.get(uid)
-    data = {
-        'destination': {}
-    }
-    for s in stop.stops_can_come():
-        data['destination'][s] = None
-    return JsonResponse(data)
-
-def connected(request, uid):
-    stop = Stop.get(uid)
-    data = {
-        'departure': {},
-        'destination': {}
-    }
-    for s in stop.stops_can_go():
-        data['departure'][s] = None
-    for s in stop.stops_can_come():
-        data['destination'][s] = None
-    return JsonResponse(data)
-
 
 def busName():
     data = {}
     for bus in Bus.objects.all():
         data[bus.uid] = bus.name
     return data
+
+def thisStop(uid):
+    return Stop.get(uid).to_hash()
+
+def connected_stops(uid, departure=False, destination=False):
+    stop = Stop.get(uid)
+    data = {
+        'departure': {},
+        'destination': {}
+    }
+    if departure:
+        for s in stop.stops_can_go():
+            data['departure'][s] = None
+    if destination:
+        for s in stop.stops_can_come():
+            data['destination'][s] = None
+    return json.dumps(data)

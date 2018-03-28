@@ -119,18 +119,11 @@ function update_frame(){
 }
 
 function get_stops_list(){
-  url = "/info" + window.location.pathname;
-  $.get("/info/stop/" + thisStopUID + "/", function(result) {
-    data[thisStopUID] = result;
-    thisStop = data[thisStopUID];
-    create_marker(thisStop, '');
-    map.setCenter(thisStop.marker.getPosition());
-    $.getJSON(url, function(result) {
-      $.each(result, function(type, stopsList){
-        $.each(stopsList, function(uid) {
-          get_stop(uid, type);
-        });
-      });
+  create_marker(thisStop, '');
+  map.setCenter(thisStop.marker.getPosition());
+  $.each(stopsList, function(type, list){
+    $.each(list, function(uid) {
+      get_stop(uid, type);
     });
   });
 }
@@ -138,12 +131,7 @@ function get_stops_list(){
 
 var map;
 var data = {};
-var thisStop;
-var stopsList;
 var type = window.location.pathname.split("/")[1];
-if (type !== ''){
-  var thisStopUID = window.location.pathname.split("/")[2];
-}
 
 async function init() {
   map = set_map();
