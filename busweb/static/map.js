@@ -122,8 +122,8 @@ function get_stops_list(){
   create_marker(thisStop, '');
   map.setCenter(thisStop.marker.getPosition());
   $.each(stopsList, function(type, list){
-    $.each(list, function(uid) {
-      get_stop(uid, type);
+    $.each(list, function(uid, info) {
+      create_marker(info, type);
     });
   });
 }

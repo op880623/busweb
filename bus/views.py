@@ -74,9 +74,9 @@ def connected_stops(uid, departure=False, destination=False):
         'destination': {}
     }
     if departure:
-        for s in stop.stops_can_go():
-            data['departure'][s] = None
+        for uid in stop.stops_can_go():
+            data['departure'][uid] = Stop.get(uid).to_hash()
     if destination:
-        for s in stop.stops_can_come():
-            data['destination'][s] = None
+        for uid in stop.stops_can_come():
+            data['destination'][uid] = Stop.get(uid).to_hash()
     return json.dumps(data)
