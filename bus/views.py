@@ -40,11 +40,6 @@ def connected_map(request, uid):
     }
     return render(request, 'bus/map.html', data)
 
-def stop(request, uid):
-    stop = Stop.get(uid)
-    data = stop.to_hash()
-    return JsonResponse(data)
-
 def stop_list(request):
     east = float(request.GET.get('e'))
     west = float(request.GET.get('w'))
@@ -54,7 +49,7 @@ def stop_list(request):
     stops = Stop.objects.filter(latitude__range=(south, north),
                                 longitude__range=(west, east))
     for stop in stops:
-        data[stop.uid] = None
+        data[stop.uid] = stop.to_hash()
     return JsonResponse(data)
 
 

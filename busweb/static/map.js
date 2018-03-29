@@ -89,22 +89,6 @@ function create_marker(stop, type){
 }
 
 
-
-function get_stop(uid, type){
-  if (!(uid in data)) {
-    $.get("/info/stop/" + uid + "/", function(result) {
-      data[uid] = result;
-      stop = data[uid];
-      if (!('marker' in stop)){
-        create_marker(stop, type);
-      }
-      else if(stop.marker.getMap() == null){
-        create_marker(stop, type);
-      }
-    });
-  }
-}
-
 function update_frame(){
   url = "/info/stop_list/"
     + "?e=" + map.getBounds().getNorthEast().lng()
@@ -112,8 +96,17 @@ function update_frame(){
     + "&w=" + map.getBounds().getSouthWest().lng()
     + "&s=" + map.getBounds().getSouthWest().lat();
   $.get(url, function(uids) {
-    $.each(uids, function(uid) {
-      get_stop(uid, type);
+    $.each(uids, function(uid, info) {
+      if (!(uid in data)) {
+        data[uid] = info;
+        stop = data[uid];
+        if (!('marker' in stop)){
+          create_marker(stop, type);
+        }
+        else if(stop.marker.getMap() == null){
+          create_marker(stop, type);
+        }
+      }
     });
   });
 }
