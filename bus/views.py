@@ -9,10 +9,7 @@ def map(request):
     data = {
         'busName': busName(),
         'thisStop': None,
-        'data': {
-            'departure': {},
-            'destination': {}
-        }
+        'data': {}
     }
     return render(request, 'bus/map.html', data)
 
@@ -64,14 +61,21 @@ def thisStop(uid):
 
 def connected_stops(uid, departure=False, destination=False):
     stop = Stop.get(uid)
-    data = {
-        'departure': {},
-        'destination': {}
-    }
+    data = {}
     if departure:
-        for uid in stop.stops_can_go():
-            data['departure'][uid] = Stop.get(uid).to_hash()
+        for bus in stop.busses():
+            for uid in bus.stops_id_after_stop(stop.uid):
+                if uid not in data:
+                    data[uid] = Stop.get(uid).to_hash()
+                if 'departure' not in data[uid]:
+                    data[uid]['departure'] = []
+                data[uid]['departure'].append(bus.name)
     if destination:
-        for uid in stop.stops_can_come():
-            data['destination'][uid] = Stop.get(uid).to_hash()
+        for bus in stop.busses():
+            for uid in bus.stops_id_before_stop(stop.uid):
+                if uid not in data:
+                    data[uid] = Stop.get(uid).to_hash()
+                if 'destination' not in data[uid]:
+                    data[uid]['destination'] = []
+                data[uid]['destination'].append(bus.name)
     return json.dumps(data)

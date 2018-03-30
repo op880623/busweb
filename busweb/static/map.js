@@ -30,22 +30,18 @@ function add_marker(stop, type){
 
 function info_window_content(stop, type){
   var content = [stop.name];
-  if (type=='departure'){
-    content = content.concat('從 ' + thisStop.name + ' 來可搭:');
-    for (index in stop.route)
-      if (thisStop.route.indexOf(stop.route[index]) !== -1)
-        content = content.concat(busName[stop.route[index]]);
+  content = content.concat('<br>路線:');
+  for (index in stop.route)
+    content = content.concat(busName[stop.route[index]]);
+  if (type=='departure' || type=='connected'){
+    content = content.concat('<br>從 ' + thisStop.name + ' 來可搭:');
+    for (index in stop.departure)
+      content = content.concat(stop.departure[index]);
   }
-  else if (type=='destination'){
-    content = content.concat('去 ' + thisStop.name + ' 可搭:');
-    for (index in stop.route)
-      if (thisStop.route.indexOf(stop.route[index]) !== -1)
-        content = content.concat(busName[stop.route[index]]);
-  }
-  else{
-    content = content.concat('路線:');
-    for (index in stop.route)
-      content = content.concat(busName[stop.route[index]]);
+  if (type=='destination' || type=='connected'){
+    content = content.concat('<br>去 ' + thisStop.name + ' 可搭:');
+    for (index in stop.destination)
+      content = content.concat(stop.destination[index]);
   }
   content = content.concat(
     '<a href="/departure/' + stop.uid + '/"><button>能去哪裡</button></a>');
@@ -77,7 +73,23 @@ function add_listener_click_marker(stop, infoWindow){
   });
 }
 
-function create_marker(stop, type){
+function create_marker(stop){
+  if ('departure' in stop){
+    if ('destination' in stop){
+      type = 'connected';
+    }
+    else {
+      type = 'departure';
+    }
+  }
+  else {
+    if ('destination' in stop){
+      type = 'destination';
+    }
+    else {
+      type = '';
+    }
+  }
   // create a new marker and store it in the stops[key].marker
   add_marker(stop, type);
   // add infoWindow to the marker and listener to close the infoWindow
@@ -101,10 +113,10 @@ function update_frame(){
         data[uid] = info;
         stop = data[uid];
         if (!('marker' in stop)){
-          create_marker(stop, type);
+          create_marker(stop);
         }
         else if(stop.marker.getMap() == null){
-          create_marker(stop, type);
+          create_marker(stop);
         }
       }
     });
@@ -112,12 +124,10 @@ function update_frame(){
 }
 
 function get_stops_list(){
-  create_marker(thisStop, '');
+  create_marker(thisStop);
   map.setCenter(thisStop.marker.getPosition());
-  $.each(stopsList, function(type, list){
-    $.each(list, function(uid, info) {
-      create_marker(info, type);
-    });
+  $.each(stopsList, function(uid, info) {
+    create_marker(info);
   });
 }
 
