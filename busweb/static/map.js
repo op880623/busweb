@@ -29,27 +29,63 @@ function add_marker(stop, type){
 }
 
 function info_window_content(stop, type){
-  var content = [stop.name];
-  content = content.concat('<br>路線:');
+  var content = '';
+
+  content = content.concat('<div class="card text-center">');
+
+  content = content.concat('<div class="card-header">');
+  content = content.concat('<h5 class="card-title">' + stop.name + '</h5>');
+  content = content.concat('</div>');
+
+
+  content = content.concat('<div class="card-body">');
+  content = content.concat('<h5 class="card-title">路線:</h5>');
+  content = content.concat('</div>');
+
+  content = content.concat('<div class="card-columns">');
   for (index in stop.route)
-    content = content.concat(stop.route[index]);
+    content = content.concat('<div class="card">' + stop.route[index] + '</div>');
+  content = content.concat('</div>');
+
+
   if (type=='departure' || type=='connected'){
-    content = content.concat('<br>從 ' + thisStop.name + ' 來可搭:');
+    content = content.concat('<div class="card-body">');
+    content = content.concat('<h5 class="card-title">從 ' + thisStop.name + ' 來可搭:</h5>');
+    content = content.concat('</div>');
+
+    content = content.concat('<div class="card-columns">');
     for (index in stop.departure)
-      content = content.concat(stop.departure[index]);
+      content = content.concat('<div class="card">' + stop.departure[index] + '</div>');
+    content = content.concat('</div>');
   }
+
+
   if (type=='destination' || type=='connected'){
-    content = content.concat('<br>去 ' + thisStop.name + ' 可搭:');
+    content = content.concat('<div class="card-body">');
+    content = content.concat('<h5 class="card-title">去 ' + thisStop.name + ' 可搭:</h5>');
+    content = content.concat('</div>');
+
+    content = content.concat('<div class="card-columns">');
     for (index in stop.destination)
-      content = content.concat(stop.destination[index]);
+      content = content.concat('<div class="card">' + stop.destination[index] + '</div>');
+    content = content.concat('</div>');
   }
+
+
+  content = content.concat('<div class="card-footer text-muted">');
+  content = content.concat('<div class="btn-group">');
   content = content.concat(
-    '<a href="/departure/' + stop.uid + '/"><button>能去哪裡</button></a>');
+    '<a type="button" class="btn btn-light" href="/departure/' + stop.uid + '/">能去哪裡</a>');
   content = content.concat(
-    '<a href="/destination/' + stop.uid + '/"><button>如何到這</button></a>');
+    '<a type="button" class="btn btn-light" href="/destination/' + stop.uid + '/">如何到這</a>');
   content = content.concat(
-    '<a href="/connected/' + stop.uid + '/"><button>與此相連</button></a>');
-  return content.join('<br>');
+    '<a type="button" class="btn btn-light" href="/connected/' + stop.uid + '/">與此相連</a>');
+  content = content.concat('</div>');
+  content = content.concat('</div>');
+
+  content = content.concat('</div>');
+
+  return content;
 }
 
 function add_listener_click_marker(stop, infoWindow){

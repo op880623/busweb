@@ -7,13 +7,15 @@ from bus.models import Bus, Stop
 
 def map(request):
     data = {
-        'thisStop': None,
+        'name': '公車地圖',
+        'thisStop': 'null',
         'data': {}
     }
     return render(request, 'bus/map.html', data)
 
 def departure_map(request, uid):
     data = {
+        'name': '從 %s 出發' % Stop.get(uid).name,
         'thisStop': thisStop(uid),
         'data': connected_stops(uid, True, False)
     }
@@ -21,6 +23,7 @@ def departure_map(request, uid):
 
 def destination_map(request, uid):
     data = {
+        'name': '前往 %s ' % Stop.get(uid).name,
         'thisStop': thisStop(uid),
         'data': connected_stops(uid, False, True)
     }
@@ -28,6 +31,7 @@ def destination_map(request, uid):
 
 def connected_map(request, uid):
     data = {
+        'name': '前往或從 %s 出發' % Stop.get(uid).name,
         'thisStop': thisStop(uid),
         'data': connected_stops(uid, True, True)
     }
