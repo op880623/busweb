@@ -32,7 +32,7 @@ function info_window_content(stop, type){
   var content = [stop.name];
   content = content.concat('<br>路線:');
   for (index in stop.route)
-    content = content.concat(busName[stop.route[index]]);
+    content = content.concat(stop.route[index]);
   if (type=='departure' || type=='connected'){
     content = content.concat('<br>從 ' + thisStop.name + ' 來可搭:');
     for (index in stop.departure)

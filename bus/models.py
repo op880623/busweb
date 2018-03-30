@@ -39,6 +39,9 @@ class Stop(models.Model):
     def busses_id(self):
         return [bus.uid for bus in self.busses()]
 
+    def busses_name(self):
+        return [bus.name for bus in self.busses()]
+
     def update(self):
         info = request_info(self.url())
         if not info:
@@ -80,7 +83,7 @@ class Stop(models.Model):
         obj['name'] = self.name
         obj['latitude'] = self.latitude
         obj['longitude'] = self.longitude
-        obj['route'] = self.busses_id()
+        obj['route'] = self.busses_name()
         return obj
 
     def stops_can_go(self):

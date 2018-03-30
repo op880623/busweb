@@ -7,7 +7,6 @@ from bus.models import Bus, Stop
 
 def map(request):
     data = {
-        'busName': busName(),
         'thisStop': None,
         'data': {}
     }
@@ -15,7 +14,6 @@ def map(request):
 
 def departure_map(request, uid):
     data = {
-        'busName': busName(),
         'thisStop': thisStop(uid),
         'data': connected_stops(uid, True, False)
     }
@@ -23,7 +21,6 @@ def departure_map(request, uid):
 
 def destination_map(request, uid):
     data = {
-        'busName': busName(),
         'thisStop': thisStop(uid),
         'data': connected_stops(uid, False, True)
     }
@@ -31,7 +28,6 @@ def destination_map(request, uid):
 
 def connected_map(request, uid):
     data = {
-        'busName': busName(),
         'thisStop': thisStop(uid),
         'data': connected_stops(uid, True, True)
     }
@@ -49,12 +45,6 @@ def stop_list(request):
         data[stop.uid] = stop.to_hash()
     return JsonResponse(data)
 
-
-def busName():
-    data = {}
-    for bus in Bus.objects.all():
-        data[bus.uid] = bus.name
-    return data
 
 def thisStop(uid):
     return Stop.get(uid).to_hash()
