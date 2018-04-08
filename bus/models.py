@@ -47,17 +47,17 @@ class Stop(models.Model):
         if not info:
             return None
         # update name
-        name = str(info['Name'])
+        name = info['Name']
         if self.name != name:
             print('update - %s name - %s to %s' % (self.uid, self.name, name))
             self.name = name
         # update latitude
-        latitude = str(info['Latitude'])
+        latitude = float(info['Latitude'])
         if self.latitude != latitude:
             print('update - %s %s - latitude' % (self.uid, self.name))
             self.latitude = latitude
         # update longitude
-        longitude = str(info['Longitude'])
+        longitude = float(info['Longitude'])
         if self.longitude != longitude:
             print('update - %s %s - longitude' % (self.uid, self.name))
             self.longitude = longitude
