@@ -19,6 +19,7 @@ requests = "==2.18.3"
 selenium = "==3.5.0"
 "urllib3" = "==1.22"
 whitenoise = "==3.2"
+django-extensions = "*"
 
 
 [dev-packages]
