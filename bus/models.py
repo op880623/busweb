@@ -121,7 +121,9 @@ class Bus(models.Model):
         return "https://ebus.gov.taipei/Route/StopsOfRoute?routeid=" + self.uid
 
     def stops(self):
-        return [Stop.get(uid) for uid in self.stopsId]
+        raw_sql = "SELECT * FROM bus_stop WHERE uid in %s" % str(tuple(self.stopsId))
+        stops = Stop.objects.raw(raw_sql)
+        return [stop for stop in stops]
 
     def stops_id_after_stop(self, stopId):
         try:
